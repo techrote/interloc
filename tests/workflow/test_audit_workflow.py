@@ -54,11 +54,13 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(audit.ready(self.plan, set()), ['IL-001'])
 
     def test_post_foundation_readiness(self):
-        self.assertEqual(audit.ready(self.plan, {'IL-001'}), ['IL-002', 'IL-028'])
+        self.assertEqual(audit.ready(self.plan, {'IL-001'}), ['IL-002', 'IL-020', 'IL-028'])
 
-    def test_tracker_closure_does_not_clear_block(self):
-        completed = {t['id'] for t in self.plan['tasks']} - {'IL-014', 'IL-015', 'IL-027'}
-        self.assertEqual(audit.ready(self.plan, completed), [])
+    def test_conditional_transport_requires_positive_gate(self):
+        completed = {'IL-001', 'IL-002', 'IL-003', 'IL-004', 'IL-005', 'IL-006', 'IL-007', 'IL-008',
+                     'IL-009', 'IL-010', 'IL-011', 'IL-020', 'IL-021'}
+        self.assertNotIn('IL-022', audit.ready(self.plan, completed))
+        self.assertIn('IL-022', audit.ready(self.plan, completed, {'G-assisted'}))
 
     def test_independent_hardening_not_blocked_by_visual(self):
         self.assertIn('IL-025', audit.ready(self.plan, {'IL-010', 'IL-021', 'IL-024'}))
