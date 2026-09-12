@@ -1,66 +1,78 @@
 # Execution atlas and milestone hierarchy
 
-Plan v1, 2026-09-12. This atlas is canonical with [workflow.json](workflow.json). Issue numbers are bound there after creation; stable IL IDs must not be recycled. See [AGENT_CONTEXT](AGENT_CONTEXT.md) for the reusable prompt and [VERIFY](VERIFY.md) for evidence gates.
+Plan v1.1, 2026-09-12. [workflow.json](workflow.json) is the machine-readable map. Stable IL IDs are not GitHub issue numbers. [BLOCKERS](BLOCKERS.md) overrides readiness for restricted work; rejected issue bodies are not duplicated here.
 
 ## Milestones
 
 | ID | Outcome | Tasks | Exit condition |
 |---|---|---|---|
-| M0 | Contracts, safety foundation and feasibility decisions | IL-001..004, IL-020, IL-028 | Offline validators, local authority, durable state and explicit Chat-transport decision; workflow tooling may continue independently. |
-| M1 | Supervised text courier | IL-005..011, IL-021 | Enrolled output -> sanitized immutable evidence -> explicit human pointer -> real ordinary-Chat compatibility report. |
-| M2 | Supervised visual MVP and release | IL-012..015, IL-024..027 | Scoped capture, honest image delivery, installation, resilience/security evidence and supervised release qualification. |
-| M3 | Cross-project integrations and local control UI | IL-016..019, IL-023 | Qualified read adapters; optional writes/proposals/UI remain separately enabled and reviewed. |
-| M4 | Conditional assisted browser transport | IL-022 | Only a positively permitted/supported route may ship; a blocked optional route does not block M2. |
+| M0 | Contracts and safety foundation | IL-001..004, IL-020, IL-028 | Offline contracts/local authority/state; transport research has a separate external blocker and is not required for manual handoff. |
+| M1 | Supervised text courier | IL-005..011, IL-021 | Enrolled output, sanitized immutable evidence and qualified human handoff. |
+| M2 | Supervised visual MVP and release | IL-012..015, IL-024..027 | Native visual gates plus installation/security/reliability evidence; currently blocked for full release. |
+| M3 | Separately qualified integrations and local UI | IL-016..019, IL-023 | Each extension independently qualified or disabled; optional work is not a core release dependency. |
+| M4 | Conditional transport | IL-022 | Deferred; no implementation authority or positive gate is inferred. |
 
-Milestones express outcomes, not calendar promises or strictly sequential phases. M3 read adapters and M0 research can run beside core work. Native GitHub milestones/labels are convenience metadata; the current connector does not expose creation for them and its milestone read endpoint was rejected. IL-028 provides idempotent gh synchronization; no native milestone creation is claimed by the planning run.
+Milestones describe outcomes, not deadlines or strictly serialized phases. They exist in this repository, not as native GitHub milestone objects: the connector did not expose the necessary administrative operation. IL-028 may later maintain optional metadata without recreating blocked issues.
 
-## Task atlas
+## Issue and dependency atlas
 
-| Stable ID | Deliverable | Direct prerequisites | Scope lane |
+All published task issues include objective, scope/non-goals, prerequisite/concurrency guidance, canonical context, implementation prompt, acceptance criteria, verification, expected artifacts and stopping conditions. Issue 14 is an administrative exception: its prompt forbids implementation until authorized resolution.
+
+| Stable task | GitHub issue | Deliverable / disposition | Direct prerequisites |
 |---|---|---|---|
-| IL-001 | Python package/test/CI and Windows development foundation | none | foundation |
-| IL-002 | Strict protocol schemas and conformance vectors | 001 | protocol |
-| IL-003 | Local policy/enrollment/approval decision model | 002 | policy |
-| IL-004 | SQLite dispatcher, replay/crash/cancel semantics | 002,003 | broker |
-| IL-005 | gh mailbox transport and transactional publication | 002,003 | transport |
-| IL-006 | Enrolled session collector and worktree attribution | 002 | collectors |
-| IL-007 | Redaction, chunking, artifact/index model | 002,003 | evidence |
-| IL-008 | CLI local approvals, import, pause and diagnostics | 004 | cli |
-| IL-009 | Bounded retention, disk/backpressure and privacy recovery | 004,005,007 | retention |
-| IL-010 | End-to-end supervised text courier slice | 005,006,007,008,009 | text integration |
-| IL-011 | Actual ordinary-Chat connector/mode compatibility gate | 010 | external evidence |
-| IL-012 | Real Windows capture backend feasibility | 001,003 | capture research |
-| IL-013 | Scoped capture/window identity provider | 004,007,012 | capture implementation |
-| IL-014 | Private image/model-vision route proof or manual fallback | 010,013 | vision evidence |
-| IL-015 | Screenshot RPC and consent/delivery integration | 008,011,013,014 | visual integration |
-| IL-016 | Read-only gh and mapped worktree adapters | 004,005,007 | github capabilities |
-| IL-017 | Optional previewed/confirmed GitHub issue writes | 008,016 | github writes |
-| IL-018 | Ansible status and pinned-reference adapter | 006,007 | ansible read |
-| IL-019 | Optional fixed-task proposal/human-launch handoff | 008,018 | ansible proposals |
-| IL-020 | Supported Chat transport/terms/minimal-client research | 001 | browser decision |
-| IL-021 | Human-mediated notifier/attachment handoff queue | 008,010,020 | notify |
-| IL-022 | Conditional assisted-browser adapter | 011,020,021 plus positive G-assisted | optional browser |
-| IL-023 | Optional lightweight Interloc control/status TUI | 008,021 | tui |
-| IL-024 | Windows packaging/startup/update/rollback | 010,021 | distribution |
-| IL-025 | Independent fault injection and resource/performance soak | 015,021,024 | reliability |
-| IL-026 | Independent adversarial security/privacy verification | 015,021,024 | security audit |
-| IL-027 | Supervised MVP qualification and operator handoff | 011,015,025,026 | release |
-| IL-028 | Workflow audit/reconciliation and optional native metadata sync | 001 | workflow tools |
+| IL-001 | [#2](https://github.com/techrote/interloc/issues/2) | Development foundation | None |
+| IL-002 | [#3](https://github.com/techrote/interloc/issues/3) | Protocol schemas and conformance | IL-001 |
+| IL-003 | [#4](https://github.com/techrote/interloc/issues/4) | Local enrollment and policy | IL-002 |
+| IL-004 | [#5](https://github.com/techrote/interloc/issues/5) | Durable broker state | IL-002, IL-003 |
+| IL-005 | [#6](https://github.com/techrote/interloc/issues/6) | Private mailbox transport | IL-002, IL-003 |
+| IL-006 | [#7](https://github.com/techrote/interloc/issues/7) | Enrolled session collection | IL-002 |
+| IL-007 | [#8](https://github.com/techrote/interloc/issues/8) | Sanitized evidence and manifests | IL-002, IL-003 |
+| IL-008 | [#9](https://github.com/techrote/interloc/issues/9) | Local approval and control CLI | IL-004 |
+| IL-009 | [#10](https://github.com/techrote/interloc/issues/10) | Retention and privacy recovery | IL-004, IL-005, IL-007 |
+| IL-010 | [#11](https://github.com/techrote/interloc/issues/11) | Supervised text integration | IL-005, IL-006, IL-007, IL-008, IL-009 |
+| IL-011 | [#12](https://github.com/techrote/interloc/issues/12) | Ordinary-Chat compatibility evidence | IL-010 |
+| IL-012 | [#13](https://github.com/techrote/interloc/issues/13) | Windows capture feasibility evidence | IL-001, IL-003 |
+| IL-013 | [#14](https://github.com/techrote/interloc/issues/14) | Publication safeguard tracker; not an implementation assignment — blocked_tracker | IL-004, IL-007, IL-012 |
+| IL-014 | [#15](https://github.com/techrote/interloc/issues/15) | Image delivery qualification | IL-010, IL-013 |
+| IL-015 | [#16](https://github.com/techrote/interloc/issues/16) | Supervised visual integration qualification | IL-008, IL-011, IL-013, IL-014 |
+| IL-016 | [#17](https://github.com/techrote/interloc/issues/17) | Read-only GitHub and worktree adapters | IL-004, IL-005, IL-007 |
+| IL-017 | [#18](https://github.com/techrote/interloc/issues/18) | Optional confirmed GitHub issue writes | IL-008, IL-016 |
+| IL-018 | **Unpublished** | Unpublished integration task; external safeguard — blocked_publication | IL-006, IL-007 |
+| IL-019 | **Unpublished** | Deferred dependent integration — deferred_unpublished | IL-008, IL-018 |
+| IL-020 | **Unpublished** | Unpublished transport research; external safeguard — blocked_publication | IL-001 |
+| IL-021 | [#19](https://github.com/techrote/interloc/issues/19) | Manual evidence and attachment handoff | IL-008, IL-010 |
+| IL-022 | **Unpublished** | Deferred conditional transport — deferred_unpublished | IL-011, IL-020, IL-021 |
+| IL-023 | [#20](https://github.com/techrote/interloc/issues/20) | Optional local Interloc status TUI | IL-008, IL-021 |
+| IL-024 | [#21](https://github.com/techrote/interloc/issues/21) | Windows text-baseline packaging | IL-010, IL-021 |
+| IL-025 | [#22](https://github.com/techrote/interloc/issues/22) | Independent text resilience and resource qualification | IL-010, IL-021, IL-024 |
+| IL-026 | [#23](https://github.com/techrote/interloc/issues/23) | Independent text security qualification | IL-010, IL-021, IL-024 |
+| IL-027 | [#24](https://github.com/techrote/interloc/issues/24) | Full supervised MVP release qualification | IL-011, IL-015, IL-025, IL-026 |
+| IL-028 | [#25](https://github.com/techrote/interloc/issues/25) | Workflow audits and optional metadata maintenance | IL-001 |
 
-## Safe concurrency
+## Execution order and safe concurrency
 
-A ready task needs all prerequisites merged with passing required evidence, no unresolved positive gate, and no overlapping path lock. Use distinct branches/worktrees. Test fixtures/interfaces produced by prerequisites are consumed immutably; proposed changes go back to the owning lane. Shared files (pyproject/lockfile, schemas, runtime wiring, roadmap/workflow manifest) have one integrator at a time. Do not run multiple agents in the same worktree.
+Begin IL-001 (#2). Once its evidence is merged, IL-002 (#3) and IL-028 (#25) may proceed in separate worktrees. After IL-002, policy IL-003 and collection IL-006 are independent. After policy, broker IL-004, transport IL-005, evidence IL-007 and capture-feasibility IL-012 can proceed subject to path/resource locks. Each lane advances as its own prerequisites pass, not as a single mandatory batch.
 
-Illustrative waves, not mandatory batches: IL-001; then IL-002/020/028; then IL-003/006; then IL-004/005/007/012; then IL-008/009/013/016/018 when individually ready; then IL-010/017/019; then IL-011/014/021; then IL-015/024/023 and positively gated IL-022; then IL-025 and IL-026 on separate test/report paths; finally IL-027. Some paths can advance without waiting for unrelated items in a wave.
+The manual text path is IL-005/006/007/008/009 -> IL-010 -> IL-011 and IL-021. Text packaging follows IL-024; independent text qualification IL-025 and IL-026 can then run beside one another. They do not depend on the blocked native provider. Full release IL-027 still requires actual visual acceptance IL-015 and must not be called complete from a text-only preview.
 
-Serialized operations: schema changes; dependency/lockfile changes; one writer per outbox/device; local journal ownership; release metadata; issue/manifest reconciliation; live write tests to the same object; native capture/consent tests on the same desktop. IL-017 and IL-019 must not be tested against active project tasks without explicit local approval. No plan item grants permission to interfere with running CyberSand/ZaagGen worktrees.
+Other published adapters/UI advance only when their declared prerequisites pass. IL-014 may prepare synthetic delivery research while its native acceptance remains blocked. This is permission for research already in its published scope, not an alternate implementation of IL-013. IL-018/019/020/022 are not assignable published work.
 
-## Stop and blocker handling
+Every assignment needs: isolated branch/worktree, base SHA, stable ID, owned paths, and test/evidence plan. A dependency is satisfied by merged artifacts and passing required evidence, not merely issue closure. The manifest records path scopes, locks and gate requirements. `tools/audit_workflow.py` exposes `conflicts()` for candidate pairs; check dependency readiness separately.
 
-Stop the affected operation on security/permission ambiguity, an unsupported Chat/vision route, missing native platform, API authentication failure, ref rewind, mutable dependency evidence or unexpected existing work. Record blocker, dependent IDs and unaffected ready tasks. Continue offline and independent lanes. A failed automatic-browser gate blocks IL-022 only, not IL-021/manual handoff. Missing Ansible executables block live IL-018/019 integration only. Missing Windows access blocks native capture/release evidence but not core unit tests.
+Serialize shared schemas, dependency lockfiles, composition root, state migrations, workflow manifest, release metadata, mailbox writes and live tests on the same desktop/conversation/object. Path-prefix comparisons are case-insensitive for Windows. An issue may propose changes outside its owned paths only through coordination with the owner/integrator. Do not alter active CyberSand/ZaagGen worktrees.
 
-Do not close the overview on the strength of planning completeness. Planning completion and runtime release completion are separate. The MVP requires IL-027 evidence; optional M3/M4 tasks must be clearly enabled, disabled or deferred.
+Each task owns its docs/evidence/IL-xxx.md report in addition to listed implementation paths. Shared canonical specification edits need a reviewed decision and coordination, not parallel blind rewrites. Runtime wiring and registry/schema extension work must acquire the appropriate lock even when a new adapter file itself is disjoint.
 
-## Repeatable orchestration
+## Blockers and stopping
 
-Before a rerun, read all issues/PRs including closed items and compare IL markers, docs and manifest. Match by stable ID, not title alone. Update existing artifacts, preserve useful findings, and refuse ambiguous duplicate matches. Newly discovered work gets a new stable ID with dependency/path/verification mapping. Record changes in EXECUTION_LEDGER. Native metadata sync is dry-run by default and must not delete existing issues/milestones/labels.
+B1 holds IL-013 and native dependent IL-014/015/full IL-027. B2 holds IL-018 and unpublished IL-019. B3 holds IL-020 and unpublished IL-022. Administrative closure or an issue number never clears these safeguards. See BLOCKERS for observed events and boundaries.
+
+Missing Windows, approved mailbox credentials or access to the chosen Chat surface blocks only relevant live tests; offline and independent work continues. Mark NOT RUN, not PASS. A negative compatibility result must not trigger private endpoint use, wider privileges, public artifact hosting or a silent product-mode switch.
+
+## Repeatability and evidence
+
+Read all-state issues/PRs and the current manifest before a planning rerun. Match unique stable markers, preserve useful human/agent findings, and refuse ambiguous duplicates. Update rather than recreate. The readonly auditor validates the DAG, issue mapping, document inventory/links and execution sections when a full issue snapshot is supplied. IL-028 extends metadata reconciliation; it must not publish withheld content as a workaround.
+
+Run `python tools/audit_workflow.py` and `python -m unittest discover -s tests/workflow -v` separately. Record exact commands and exit status. Gate and release evidence follows [VERIFY](VERIFY.md); source references and distinctions between requirements/design/findings remain in [PROVENANCE](PROVENANCE.md), [RESEARCH](RESEARCH.md) and [DECISIONS](DECISIONS.md).
+
+Planning-document completion is separate from issue-publication completeness and runtime-release completeness. The [ledger](EXECUTION_LEDGER.md) records all three explicitly.

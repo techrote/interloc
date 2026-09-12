@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "repository": "techrote/interloc",
+  "overview_issue": 1,
+  "plan_date": "2026-09-12",
+  "runtime_state": "not_implemented",
+  "scope_note": "Read-only planning metadata. Blocked or unpublished records must not be auto-published or interpreted as implementation authority.",
+  "milestones": [
+    {
+      "id": "M0",
+      "title": "Contracts and safety foundation",
+      "native_number": null
+    },
+    {
+      "id": "M1",
+      "title": "Supervised text courier",
+      "native_number": null
+    },
+    {
+      "id": "M2",
+      "title": "Supervised visual MVP and release",
+      "native_number": null
+    },
+    {
+      "id": "M3",
+      "title": "Separately qualified integrations and local UI",
+      "native_number": null
+    },
+    {
+      "id": "M4",
+      "title": "Conditional transport; not a release dependency",
+      "native_number": null
+    }
+  ],
+  "canonical_docs": [
+    "README.md",
+    "AGENTS.md",
+    "docs/AGENT_CONTEXT.md",
+    "docs/ROADMAP.md",
+    "docs/SPEC.md",
+    "docs/SECURITY.md",
+    "docs/VERIFY.md",
+    "docs/RESEARCH.md",
+    "docs/DECISIONS.md",
+    "docs/PROVENANCE.md",
+    "docs/INTEGRATIONS.md",
+    "docs/BLOCKERS.md",
+    "docs/EXECUTION_LEDGER.md",
+    "docs/evidence/planning-audit.md"
+  ],
+  "blockers": [
+    {
+      "id": "B1",
+      "status": "unresolved",
+      "kind": "external_publication_safeguard",
+      "task": "IL-013",
+      "tracker_issue": 14
+    },
+    {
+      "id": "B2",
+      "status": "unresolved",
+      "kind": "external_publication_safeguard",
+      "task": "IL-018",
+      "tracker_issue": null
+    },
+    {
+      "id": "B3",
+      "status": "unresolved",
+      "kind": "external_publication_safeguard",
+      "task": "IL-020",
+      "tracker_issue": null
+    }
+  ],
+  "tasks": [
+    {"id": "IL-001", "issue": 2, "title": "Development foundation", "milestone": "M0", "requires": [], "paths": ["pyproject.toml", "src/interloc/__init__.py", ".github/workflows/"], "locks": ["dependency-lock", "runtime-wiring"], "publication": "published", "blockers": [], "optional": false, "verification": "docs/evidence/IL-001.md", "required_gates": []},
+    {"id": "IL-002", "issue": 3, "title": "Protocol schemas and conformance", "milestone": "M0", "requires": ["IL-001"], "paths": ["schemas/", "src/interloc/protocol/", "tests/protocol/"], "locks": ["protocol-schema"], "publication": "published", "blockers": [], "optional": false, "verification": "docs/evidence/IL-002.md", "required_gates": []},
+    {"id": "IL-003", "issue": 4, "title": "Local enrollment and policy", "milestone": "M0", "requires": ["IL-002"], "paths": ["src/interloc/policy/", "tests/policy/"], "locks": [], "publication": "published", "blockers": [], "optional": false, "verification": "docs/evidence/IL-003.md", "required_gates": []},
+    {"id": "IL-004", "issue": 5, "title": "Durable broker state", "milestone": "M0", "requires": ["IL-002", "IL-003"], "paths": ["src/interloc/broker/", "tests/broker/"], "locks": ["state-migration"], "publication": "published", "blockers": [], "optional": false, "verification": "docs/evidence/IL-004.md", "required_gates": []},
+    {"id": "IL-005", "issue": 6, "title": "Private mailbox transport", "milestone": "M1", "requires": ["IL-002", "IL-003"], "paths": ["src/interloc/transport/github/", "tests/transport/"], "locks": ["mailbox-writer"], "publication": "published", "blockers": [], "optional": false, "verification": "docs/evidence/IL-005.md", "required_gates": []},
+    {"id": "IL-006", "issue": 7, "title": "Enrolled session collection", "milestone": "M1", "requires": ["IL-002"], "paths": ["src/interloc/collectors/", "tests/collectors/"], "locks": [], "publication": "published", "blockers": [], "optional": false, "verification": "docs/evidence/IL-006.md", "required_gates": []},
+    {"id": "IL-007", "issue": 8, "title": "Sanitized evidence and manifests", "milestone": "M1", "requires": ["IL-002", "IL-003"], "paths": ["src/interloc/evidence/", "tests/evidence/"], "locks": [], "publication": "published", "blockers": [], "optional": false, "verification": "docs/evidence/IL-007.md", "required_gates": []},
+    {"id": "IL-008", "issue": 9, "title": "Local approval and control CLI", "milestone": "M1", "requires": ["IL-004"], "paths": ["src/interloc/cli/", "tests/cli/"], "locks": ["runtime-wiring"], "publication": "published", "blockers": [], "optional": false, "verification": "docs/evidence/IL-008.md", "required_gates": []},
+    {"id": "IL-009", "issue": 10, "title": "Retention and privacy recovery", "milestone": "M1", "requires": ["IL-004", "IL-005", "IL-007"], "paths": ["src/interloc/retention/", "tests/retention/"], "locks": ["state-migration"], "publication": "published", "blockers": [], "optional": false, "verification": "docs/evidence/IL-009.md", "required_gates": []},
+    {"id": "IL-010", "issue": 11, "title": "Supervised text integration", "milestone": "M1", "requires": ["IL-005", "IL-006", "IL-007", "IL-008", "IL-009"], "paths": ["src/interloc/app.py", "tests/integration/text/"], "locks": ["runtime-wiring"], "publication": "published", "blockers": [], "optional": false, "verification": "docs/evidence/IL-010.md", "required_gates": []},
+    {"id": "IL-011", "issue": 12, "title": "Ordinary-Chat compatibility evidence", "milestone": "M1", "requires": ["IL-010"], "paths": ["tests/manual/chat-compatibility.md"], "locks": ["chat-session"], "publication": "published", "blockers": [], "optional": false, "verification": "docs/evidence/IL-011.md", "required_gates": []},
+    {"id": "IL-012", "issue": 13, "title": "Windows capture feasibility evidence", "milestone": "M2", "requires": ["IL-001", "IL-003"], "paths": ["experiments/capture/", "tests/manual/capture-matrix.md"], "locks": ["desktop", "dependency-lock"], "publication": "published", "blockers": [], "optional": false, "verification": "docs/evidence/IL-012.md", "required_gates": []},
+    {"id": "IL-013", "issue": 14, "title": "Publication safeguard tracker; not an implementation assignment", "milestone": "M2", "requires": ["IL-004", "IL-007", "IL-012"], "paths": [], "locks": [], "publication": "blocked_tracker", "blockers": ["B1"], "optional": false, "verification": "docs/evidence/IL-013.md", "required_gates": []},
+    {"id": "IL-014", "issue": 15, "title": "Image delivery qualification", "milestone": "M2", "requires": ["IL-010", "IL-013"], "paths": ["tests/manual/vision-delivery.md"], "locks": ["chat-session"], "publication": "published", "blockers": [], "optional": false, "verification": "docs/evidence/IL-014.md", "required_gates": []},
+    {"id": "IL-015", "issue": 16, "title": "Supervised visual integration qualification", "milestone": "M2", "requires": ["IL-008", "IL-011", "IL-013", "IL-014"], "paths": ["tests/integration/visual/", "src/interloc/app.py"], "locks": ["runtime-wiring", "desktop", "chat-session"], "publication": "published", "blockers": [], "optional": false, "verification": "docs/evidence/IL-015.md", "required_gates": []},
+    {"id": "IL-016", "issue": 17, "title": "Read-only GitHub and worktree adapters", "milestone": "M3", "requires": ["IL-004", "IL-005", "IL-007"], "paths": ["src/interloc/capabilities/github/read.py", "src/interloc/capabilities/github/worktree.py", "tests/capabilities/github_read/"], "locks": ["protocol-schema"], "publication": "published", "blockers": [], "optional": false, "verification": "docs/evidence/IL-016.md", "required_gates": []},
+    {"id": "IL-017", "issue": 18, "title": "Optional confirmed GitHub issue writes", "milestone": "M3", "requires": ["IL-008", "IL-016"], "paths": ["src/interloc/capabilities/github/write.py", "tests/capabilities/github_write/"], "locks": ["protocol-schema", "live-github-object"], "publication": "published", "blockers": [], "optional": true, "verification": "docs/evidence/IL-017.md", "required_gates": []},
+    {"id": "IL-018", "issue": null, "title": "Unpublished integration task; external safeguard", "milestone": "M3", "requires": ["IL-006", "IL-007"], "paths": [], "locks": [], "publication": "blocked_publication", "blockers": ["B2"], "optional": false, "verification": "docs/evidence/IL-018.md", "required_gates": []},
+    {"id": "IL-019", "issue": null, "title": "Deferred dependent integration", "milestone": "M3", "requires": ["IL-008", "IL-018"], "paths": [], "locks": [], "publication": "deferred_unpublished", "blockers": ["B2"], "optional": true, "verification": "docs/evidence/IL-019.md", "required_gates": []},
+    {"id": "IL-020", "issue": null, "title": "Unpublished transport research; external safeguard", "milestone": "M0", "requires": ["IL-001"], "paths": [], "locks": [], "publication": "blocked_publication", "blockers": ["B3"], "optional": false, "verification": "docs/evidence/IL-020.md", "required_gates": []},
+    {"id": "IL-021", "issue": 19, "title": "Manual evidence and attachment handoff", "milestone": "M1", "requires": ["IL-008", "IL-010"], "paths": ["src/interloc/notify/manual.py", "tests/notify/"], "locks": [], "publication": "published", "blockers": [], "optional": false, "verification": "docs/evidence/IL-021.md", "required_gates": []},
+    {"id": "IL-022", "issue": null, "title": "Deferred conditional transport", "milestone": "M4", "requires": ["IL-011", "IL-020", "IL-021"], "paths": [], "locks": [], "publication": "deferred_unpublished", "blockers": ["B3"], "optional": true, "verification": "docs/evidence/IL-022.md", "required_gates": ["G-assisted"]},
+    {"id": "IL-023", "issue": 20, "title": "Optional local Interloc status TUI", "milestone": "M3", "requires": ["IL-008", "IL-021"], "paths": ["src/interloc/tui/", "tests/tui/"], "locks": ["dependency-lock"], "publication": "published", "blockers": [], "optional": true, "verification": "docs/evidence/IL-023.md", "required_gates": []},
+    {"id": "IL-024", "issue": 21, "title": "Windows text-baseline packaging", "milestone": "M2", "requires": ["IL-010", "IL-021"], "paths": ["packaging/", "tests/packaging/"], "locks": ["dependency-lock", "release-metadata"], "publication": "published", "blockers": [], "optional": false, "verification": "docs/evidence/IL-024.md", "required_gates": []},
+    {"id": "IL-025", "issue": 22, "title": "Independent text resilience and resource qualification", "milestone": "M2", "requires": ["IL-010", "IL-021", "IL-024"], "paths": ["tests/reliability/"], "locks": ["measurement-host"], "publication": "published", "blockers": [], "optional": false, "verification": "docs/evidence/IL-025.md", "required_gates": []},
+    {"id": "IL-026", "issue": 23, "title": "Independent text security qualification", "milestone": "M2", "requires": ["IL-010", "IL-021", "IL-024"], "paths": ["tests/security/"], "locks": [], "publication": "published", "blockers": [], "optional": false, "verification": "docs/evidence/IL-026.md", "required_gates": []},
+    {"id": "IL-027", "issue": 24, "title": "Full supervised MVP release qualification", "milestone": "M2", "requires": ["IL-011", "IL-015", "IL-025", "IL-026"], "paths": ["docs/release/"], "locks": ["release-metadata", "desktop", "chat-session"], "publication": "published", "blockers": [], "optional": false, "verification": "docs/evidence/IL-027.md", "required_gates": []},
+    {"id": "IL-028", "issue": 25, "title": "Workflow audits and optional metadata maintenance", "milestone": "M0", "requires": ["IL-001"], "paths": ["tools/audit_workflow.py", "tools/workflow/", "tests/workflow/", "docs/workflow.json"], "locks": ["workflow-manifest"], "publication": "published", "blockers": [], "optional": false, "verification": "docs/evidence/IL-028.md", "required_gates": []}
+  ]
+}
