@@ -1,0 +1,18 @@
+# Architecture decision register
+
+Status: selected planning baseline, 2026-09-12. Changing a decision requires an evidence-backed amendment and updating affected issue/verification references; no silent drift.
+
+| ADR | Decision | Rationale and consequence |
+|---|---|---|
+| ADR-01 | Windows-first Python 3.12+ broker, standard CLI, SQLite local journal, gh.exe transport. | Matches the user's environment and keeps protocol/core testable without a desktop app. IL-001 pins supported dependencies; an isolated capture helper may be selected by IL-012. No Node, Red Hat Ansible, API subscription or elevated service is mandatory. |
+| ADR-02 | Source and runtime mailbox are separate. | `techrote/interloc` main contains code/docs/synthetic fixtures only. Runtime repository is explicitly configured private and enrolled by numeric repository ID. This avoids code-history pollution and executable updates through a message stream. A second runtime repository is deployment configuration, not assumed to exist now. |
+| ADR-03 | Immutable messages; single local broker/device; one serialized outbox writer. | Requests are not moved through Git folders to simulate locks. SQLite records execution/publication states; crash ambiguity is visible. No exactly-once side-effect promise. |
+| ADR-04 | Repo/branch/path/device enrollment plus local policy, not self-declared actor names. | All remote bytes remain untrusted. An actor field is attribution only. Fine-grained local grants and confirmation bound the damage of compromised mailbox credentials. Branch separation is coordination, not a security boundary. |
+| ADR-05 | Read-first capability registry; bounded typed arguments. | Arbitrary shell, executable path, remote policy, arbitrary gh argv and auto-update are excluded. Clipboard, full desktop, raw filesystem and input injection are not MVP capabilities. |
+| ADR-06 | Human-mediated ordinary-Chat handoff is baseline. | It honors the product constraint without assuming supported browser automation. Normal-Chat CLI and auto notification remain gated. A local Interloc status TUI is not represented as a ChatGPT terminal client. |
+| ADR-07 | Private image delivery is its own gate. | Text connectors are not vision channels. Keep captures local, publish metadata, and support explicit attachment handoff; no public URLs, long-lived signed URLs or base64-in-text workaround. |
+| ADR-08 | Explicit enrollment, privacy-first collection. | Capture supervised child streams or approved log files. No global keylogger, screen polling, clipboard watcher or arbitrary terminal scraping. Preserve ANSI-free text as data and redact before remote publication. |
+| ADR-09 | Integrate, do not merge, Ansible/intrallm trust planes. | Consume pinned reference/status data. Optional task proposals require human action through existing trusted runner registry. Do not auto-run an agent-modified launcher. |
+| ADR-10 | Repository-native milestone/issue map is authoritative. | Stable IL IDs survive issue renumbering; GitHub issue numbers are bound in workflow.json. Native milestone/label decoration is optional metadata and can be materialized idempotently by IL-028; missing connector endpoints must not block planning. |
+| ADR-11 | Targets and budgets are proposed requirements, not benchmark results. | Tests must measure byte, queue, memory and latency bounds on named hardware. External network time and human approval time are reported separately. |
+| ADR-12 | Manual integration and research can complete with negative findings. | An unavailable automatic route becomes a recorded blocker for that route, not pressure to bypass controls or mislabel a demo. Core release still needs its explicitly defined supervised acceptance path. |
