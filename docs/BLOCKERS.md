@@ -1,23 +1,17 @@
-# External blockers and withheld work
+# Publication history and resolved blockers
 
-Status date: 2026-09-12. These are administrative records, not replacement implementation prompts. Earlier architecture describes intent; it does not authorize execution across a blocker.
+Status date: 2026-09-12.
 
-| Blocker | Observed event | Published record | Consequence |
-|---|---|---|---|
-| B1 | The connector safety check rejected creation of the IL-013 screenshot-provider implementation issue. | [Issue 14](https://github.com/techrote/interloc/issues/14) is a blocker tracker only. | IL-013 cannot be treated as implemented; native IL-014/015 and full IL-027 release qualification remain blocked. |
-| B2 | The connector rejected both the IL-018 Ansible-adapter issue and an administrative tracker attempt. | No IL-018 issue exists. | IL-018 is blocked; dependent IL-019 was not submitted and remains unpublished. |
-| B3 | The connector rejected creation of the IL-020 transport-research issue. | No IL-020 issue exists. | IL-020 is blocked; dependent conditional IL-022 was not submitted and remains unpublished. |
+The earlier publication-only blockers are resolved. All planned stable task IDs IL-001 through IL-028 now have GitHub issues. No publication blocker remains active.
 
-The tool did not supply a detailed reason beyond its safety-check refusal. Do not invent one. No rejected implementation body is republished here. Do not retry rejected content through another interface, auto-generate missing issues, or interpret administrative closure as implementation evidence. Authorized resolution or explicit deferral must be recorded before requalification.
+| Former blocker | Resolution |
+|---|---|
+| B1 — IL-013 publication | Issue [#14](https://github.com/techrote/interloc/issues/14) is now the IL-013 implementation issue. |
+| B2 — IL-018/IL-019 publication | Canonical issues are [#26](https://github.com/techrote/interloc/issues/26) and [#27](https://github.com/techrote/interloc/issues/27). Later accidental duplicates #28/#29 are closed as duplicates. |
+| B3 — IL-020/IL-022 publication | IL-020 is [#30](https://github.com/techrote/interloc/issues/30); conditional IL-022 is [#31](https://github.com/techrote/interloc/issues/31). |
 
-## Independent work remains available
+Publication resolution does not waive dependency, consent, compatibility, verification, or conditional-gate requirements. In particular, IL-022 remains conditional on the positive gate defined by IL-020 and the canonical research/verification documents.
 
-The manual handoff IL-021 does not depend on browser research. Text packaging and text resilience/security qualification IL-024/025/026 do not depend on the native screenshot provider. The first executable task is [IL-001 / issue 2](https://github.com/techrote/interloc/issues/2). Its merged evidence unlocks IL-002 and IL-028. Other independent lanes follow the [atlas](ROADMAP.md).
+The connector still does not expose native GitHub milestone creation in this workflow, so the five milestone definitions remain repository-native. That is metadata, not an issue-publication blocker.
 
-## Separate capability and runtime limits
-
-The connector lacks exposed native milestone creation and rejected a milestone-list URL; five milestone definitions are therefore repository-native, not native GitHub milestone objects. No extra credentials were obtained to bypass that limitation.
-
-Windows capture, actual ordinary-Chat connector/mode behavior, image delivery and installation/soak evidence remain future runtime gates. Their absence is not a failed test result. The ordinary-Chat baseline is explicit human submission; no autonomous notification or model-reply extraction is approved by this planning run.
-
-Full issue publication is **partially blocked**, not complete. Published independent tasks are usable. All 28 planned stable task IDs remain visible in workflow.json, with actual issue numbers or explicit unpublished states.
+Runtime gates remain future implementation work: Windows verification, mailbox enrollment, ordinary-Chat compatibility, image-delivery qualification, packaging, resilience/security qualification, and release evidence. Their status is tracked by their published issues, not by this historical publication file.
