@@ -51,9 +51,11 @@ Issues #28 and #29 are closed duplicates of canonical IL-018/#26 and IL-019/#27 
 
 ## Execution order and safe concurrency
 
-Begin IL-001 (#2). Once its evidence is merged, IL-002 (#3), IL-020 (#30), and IL-028 (#25) may proceed subject to their own resource/path locks. After IL-002, policy IL-003 and collection IL-006 are independent. After policy, broker IL-004, transport IL-005, evidence IL-007 and capture-feasibility IL-012 can proceed subject to declared locks.
+Current frontier, reconciled 2026-09-13: IL-001..007, IL-009, IL-018, IL-020 and IL-028 have merged completion evidence. IL-016/#17 can proceed independently. IL-012/#13 needs interactive Windows capture evidence. IL-008/#9 has tested unmerged code with a recorded PR-creation block and outstanding manual check; do not bypass that block or treat its branch as a merged prerequisite. See the [execution ledger](EXECUTION_LEDGER.md) and [session handover](SESSION_HANDOVER_2026-09-13.md).
 
-The manual text path remains IL-005/006/007/008/009 -> IL-010 -> IL-011 and IL-021. Packaging follows IL-024; IL-025 and IL-026 can run beside one another. Full release IL-027 still requires actual visual acceptance IL-015.
+The original bootstrap order remains valid as a dependency graph, not a direction to redo completed work: IL-001 precedes IL-002/020/028; IL-002 precedes policy/collection; policy precedes broker/transport/evidence/capture feasibility. Existing merged artifacts are the starting point.
+
+The manual text path remains IL-005/006/007/008/009 -> IL-010 -> IL-011 and IL-021. IL-008 currently prevents IL-010 from becoming ready, despite retention and transport completion. Packaging follows IL-024; IL-025 and IL-026 can run beside one another. Full release IL-027 still requires actual visual acceptance IL-015.
 
 M3 integrations are separately qualified. IL-018 is canonical #26 and IL-019 is canonical #27. IL-020 research may complete with a negative result; IL-022 #31 remains published but is not implementation-ready without a positive G-assisted decision.
 
