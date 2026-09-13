@@ -8,6 +8,7 @@ from typing import Any, Mapping
 from uuid import UUID
 
 from .errors import ProtocolError
+from .reads import READ_CAPABILITIES, read_arguments
 from .jsonutil import canonical_json, canonical_sha256, strict_loads
 
 REQUEST_MAX_BYTES = 32 * 1024
@@ -89,6 +90,8 @@ def safe_mailbox_path(value: Any, *, path: str = "$.path") -> str:
 
 def _arguments(capability: str, value: Any, session_id: str | None) -> dict[str, Any]:
     path = "$.arguments"
+    if capability in READ_CAPABILITIES:
+        return read_arguments(capability, value)
     if capability == "system.ping":
         obj = _object(value, required={"nonce"}, path=path)
         return {"nonce": _string(obj["nonce"], max_len=128, path=f"{path}.nonce")}
