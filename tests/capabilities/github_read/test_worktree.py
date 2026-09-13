@@ -128,7 +128,7 @@ class WorktreeTests(unittest.TestCase):
     def test_linked_worktree_uses_independently_enrolled_common_dir(self):
         linked = self.base/'linked space'
         self.git('worktree', 'add', '-b', 'other', str(linked))
-        git_dir = Path((linked/'.git').read_text().strip()[8:])
+        git_dir = Path((linked/'.git').read_text(encoding='utf-8').strip()[8:])
         tree = Worktree('linked', linked, git_dir, self.root/'.git')
         result = self.read(tree)
         self.assertEqual(result['branch'], 'other')
