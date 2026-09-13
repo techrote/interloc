@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <d3d11.h>
 #include <dxgi.h>
+#include <windows.graphics.capture.h>
 #include <windows.graphics.capture.interop.h>
 #include <windows.graphics.directx.direct3d11.interop.h>
 
@@ -17,6 +18,7 @@
 #include <fstream>
 #include <iostream>
 #include <mutex>
+#include <stdexcept>
 #include <string>
 
 #pragma comment(lib, "d3d11.lib")
@@ -73,12 +75,15 @@ IDirect3DDevice make_device(winrt::com_ptr<ID3D11Device>& native_device,
 }
 
 GraphicsCaptureItem make_item(HWND hwnd) {
-    auto interop = winrt::get_activation_factory<GraphicsCaptureItem, IGraphicsCaptureItemInterop>();
-    GraphicsCaptureItem item{nullptr};
+    auto activation_factory = winrt::get_activation_factory<GraphicsCaptureItem>();
+    auto interop = activation_factory.as<IGraphicsCaptureItemInterop>();
+    winrt::com_ptr<ABI::Windows::Graphics::Capture::IGraphicsCaptureItem> abi_item;
     winrt::check_hresult(interop->CreateForWindow(
         hwnd,
-        winrt::guid_of<winrt::Windows::Graphics::Capture::IGraphicsCaptureItem>(),
-        winrt::put_abi(item)));
+        winrt::guid_of<ABI::Windows::Graphics::Capture::IGraphicsCaptureItem>(),
+        abi_item.put_void()));
+    GraphicsCaptureItem item{nullptr};
+    winrt::copy_from_abi(item, abi_item.get());
     return item;
 }
 
