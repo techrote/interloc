@@ -4,7 +4,7 @@ import ctypes
 import os
 import unittest
 
-from interloc.capabilities.capture.greenshot import Win32GreenshotHotkeyInjector, Win32WindowApi
+from interloc.capabilities.capture import Win32GreenshotHotkeyInjector, Win32WindowApi
 
 
 @unittest.skipUnless(os.name == "nt", "Windows-only binding smoke")
