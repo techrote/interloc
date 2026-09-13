@@ -16,6 +16,8 @@ from uuid import UUID
 
 from interloc.protocol import ProtocolError, request_digest, validate_request
 
+from interloc.protocol.reads import READ_CAPABILITIES
+
 CORE_CAPABILITIES = {"system.ping", "terminal.tail", "window.list", "capture.window"}
 SAFE_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 SAFE_REF_RE = re.compile(r"^(?!/)(?!.*(?:^|/)\.\.?(/|$))[A-Za-z0-9._/-]{1,200}$")
@@ -56,7 +58,7 @@ class Grant:
     destination: str = "mailbox"
 
     def validate(self) -> None:
-        if self.capability not in CORE_CAPABILITIES:
+        if self.capability not in CORE_CAPABILITIES | READ_CAPABILITIES:
             raise PolicyError("CONFIG_INVALID", f"unsupported capability grant {self.capability!r}")
         if not isinstance(self.scope_id, str) or not self.scope_id or len(self.scope_id) > 128 or self.scope_id == "*":
             raise PolicyError("CONFIG_INVALID", "scope_id must be explicit and bounded; wildcard is forbidden")
@@ -150,6 +152,10 @@ def request_scope(request: Mapping[str, object]) -> str:
         return "session:" + str(request["session_id"])
     arguments = request["arguments"]
     assert isinstance(arguments, Mapping)
+    if capability in READ_CAPABILITIES:
+        key = "worktree_alias" if capability == "git.worktree.status" else "repo_alias"
+        prefix = "worktree:" if key == "worktree_alias" else "project:"
+        return prefix + str(arguments[key])
     if capability in {"window.list", "capture.window"}:
         return "capture:" + str(arguments["capture_scope_id"])
     raise PolicyError("UNKNOWN_CAPABILITY", f"unsupported capability {capability!r}")
