@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools==80.9.0", "wheel==0.45.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "interlocuator"
+version = "0.1.0.dev0"
+description = "Local capability broker and repo-backed courier for supervised ordinary-Chat workflows"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "Proprietary" }
+authors = [{ name = "techrote" }]
+dependencies = []
+
+[project.scripts]
+interloc = "interloc.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.interloc]
+local_state_dirname = "Interlocuator"
