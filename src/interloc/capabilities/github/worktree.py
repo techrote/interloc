@@ -36,12 +36,12 @@ class Worktree:
             if not text.startswith("gitdir: "):
                 raise ReadError("WORKTREE_IDENTITY_CHANGED")
             actual = _pointer(self.root, text[8:])
-        if actual != self.git_dir:
+        if not _same_directory(actual, self.git_dir):
             raise ReadError("WORKTREE_IDENTITY_CHANGED")
         pointer = self.git_dir / "commondir"
         _safe(pointer)
         actual_common = _pointer(self.git_dir, _read(pointer, 4096).decode("utf-8").strip()) if pointer.exists() else self.git_dir
-        if actual_common != self.common_dir:
+        if not _same_directory(actual_common, self.common_dir):
             raise ReadError("WORKTREE_IDENTITY_CHANGED")
 
 
@@ -53,6 +53,23 @@ def _safe(path: Path) -> None:
     for part in (path, *path.parents):
         if part.is_symlink() or part.is_junction():
             raise ReadError("PATH_DENIED")
+
+
+
+def _same_directory(actual: Path, enrolled: Path) -> bool:
+    """Require OS-proven directory identity, not merely equal path spelling.
+
+    Windows may expose one directory through long and 8.3 names. Neither
+    textual normalization nor a matching basename establishes enrollment.
+    Reject link/reparse paths first, then compare the filesystem identities.
+    Failure to stat either path propagates as an unavailable observation.
+    """
+    _safe(actual)
+    _safe(enrolled)
+    left, right = actual.stat(), enrolled.stat()
+    if not stat.S_ISDIR(left.st_mode) or not stat.S_ISDIR(right.st_mode):
+        return False
+    return os.path.samestat(left, right)
 
 
 def _pointer(base: Path, text: str) -> Path:

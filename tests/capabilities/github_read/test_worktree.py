@@ -9,7 +9,7 @@ import unittest
 from unittest.mock import patch
 
 from interloc.capabilities.github.process import ReadError, ProcessResult
-from interloc.capabilities.github.worktree import Worktree, inspect_worktree
+from interloc.capabilities.github.worktree import Worktree, inspect_worktree, _same_directory
 
 GIT = shutil.which('git')
 
@@ -135,6 +135,41 @@ class WorktreeTests(unittest.TestCase):
         self.assertFalse(result['dirty'])
         wrong = Worktree('linked', linked, git_dir, self.base)
         self.assert_code('WORKTREE_IDENTITY_CHANGED', self.read, wrong)
+
+    def test_directory_identity_never_adopts_a_different_directory_or_file(self):
+        other = self.base/'different metadata'; other.mkdir()
+        self.assertTrue(_same_directory(self.root/'.git', self.tree.git_dir))
+        self.assertFalse(_same_directory(other, self.tree.git_dir))
+        self.assertFalse(_same_directory(self.root/'one.txt', self.root/'one.txt'))
+        with self.assertRaises(OSError):
+            _same_directory(self.base/'missing', self.tree.git_dir)
+
+    def test_directory_identity_still_rejects_links(self):
+        link = self.base/'metadata link'
+        try:
+            link.symlink_to(self.tree.git_dir, target_is_directory=True)
+        except OSError:
+            self.skipTest('symlinks require Windows developer mode or privilege')
+        try:
+            self.assertTrue(os.path.samefile(link, self.tree.git_dir))
+            self.assert_code('PATH_DENIED', _same_directory, link, self.tree.git_dir)
+        finally:
+            link.unlink()
+
+    @unittest.skipUnless(os.name == 'nt', 'Windows long-path alias test')
+    def test_windows_long_name_and_enrolled_temp_alias_have_same_identity(self):
+        import ctypes
+        from ctypes import wintypes
+        get_long = ctypes.WinDLL('kernel32', use_last_error=True).GetLongPathNameW
+        get_long.argtypes = [wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.DWORD]
+        get_long.restype = wintypes.DWORD
+        buffer = ctypes.create_unicode_buffer(32768)
+        length = get_long(str(self.tree.common_dir), buffer, len(buffer))
+        self.assertTrue(0 < length < len(buffer))
+        long_form = Path(buffer.value)
+        self.assertTrue(_same_directory(long_form, self.tree.common_dir))
+        result = self.read(Worktree('long', self.root, long_form, self.tree.common_dir))
+        self.assertFalse(result['dirty'])
 
     def test_pointer_to_unenrolled_git_directory_is_denied(self):
         other = self.base/'other'; other.mkdir()
