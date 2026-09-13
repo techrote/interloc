@@ -7,12 +7,12 @@ from .greenshot import (
     GreenshotCaptureProvider,
     GreenshotSettings,
     HotkeyChord,
-    Win32GreenshotHotkeyInjector,
     Win32WindowApi,
     WindowIdentity,
     WindowLease,
     load_greenshot_settings,
 )
+from .win32 import Win32GreenshotHotkeyInjector
 
 __all__ = [
     "CaptureArtifact",
