@@ -1,0 +1,2 @@
+# Interlocuator deliberately has no third-party runtime or test dependencies at IL-001.
+# Build dependencies are exactly pinned in pyproject.toml [build-system].
