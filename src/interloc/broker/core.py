@@ -5,7 +5,7 @@ registered locally; remote requests cannot select Python callables or commands.
 """
 from __future__ import annotations
 
-from contextlib import AbstractContextManager
+from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import json
@@ -19,7 +19,7 @@ from uuid import uuid4
 from interloc.policy import Decision
 from interloc.protocol import canonical_json, canonical_sha256, validate_request
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 PENDING_STATES = {"received", "validated", "awaiting_approval", "ready", "running", "result_saved", "published", "notification_pending"}
 TERMINAL_STATES = {"acknowledged", "rejected", "expired", "cancelled", "failed", "indeterminate", "quarantined"}
 ALL_STATES = PENDING_STATES | TERMINAL_STATES
@@ -166,64 +166,80 @@ class Journal:
     def _migrate(self) -> None:
         version = int(self._db.execute("PRAGMA user_version").fetchone()[0])
         if version > SCHEMA_VERSION:
-            raise BrokerError("STATE_NEWER_VERSION", f"database schema {version} is newer than supported {SCHEMA_VERSION}")
-        if version == 0:
-            with self._db:
-                self._db.executescript(
-                    """
-                    CREATE TABLE requests (
-                      repository_id INTEGER NOT NULL,
-                      mailbox_epoch TEXT NOT NULL,
-                      request_id TEXT NOT NULL,
-                      input_sha256 TEXT NOT NULL,
-                      request_json BLOB NOT NULL,
-                      capability TEXT NOT NULL,
-                      state TEXT NOT NULL,
-                      policy_revision INTEGER NOT NULL,
-                      policy_decision TEXT NOT NULL,
-                      created_at TEXT NOT NULL,
-                      updated_at TEXT NOT NULL,
-                      expires_at TEXT NOT NULL,
-                      attempt_id TEXT,
-                      attempt_started_at TEXT,
-                      possible_effect INTEGER NOT NULL DEFAULT 0,
-                      cancel_requested INTEGER NOT NULL DEFAULT 0,
-                      result_json BLOB,
-                      artifact_ids_json BLOB,
-                      publication_ref TEXT,
-                      notification_ref TEXT,
-                      terminal_code TEXT,
-                      PRIMARY KEY (repository_id, mailbox_epoch, request_id)
-                    );
-                    CREATE TABLE collisions (
-                      id INTEGER PRIMARY KEY AUTOINCREMENT,
-                      repository_id INTEGER NOT NULL,
-                      mailbox_epoch TEXT NOT NULL,
-                      request_id TEXT NOT NULL,
-                      existing_sha256 TEXT NOT NULL,
-                      conflicting_sha256 TEXT NOT NULL,
-                      observed_at TEXT NOT NULL
-                    );
-                    CREATE INDEX requests_state_idx ON requests(state);
-                    """
-                )
-                self._db.execute(f"PRAGMA user_version={SCHEMA_VERSION}")
-        elif version != SCHEMA_VERSION:
-            raise BrokerError("STATE_MIGRATION_REQUIRED", f"unsupported schema version {version}")
+            raise BrokerError("STATE_NEWER_VERSION", "database schema is newer than this software")
+        with self.transaction():
+            # Re-read under the writer transaction: two CLI processes may open together.
+            version = int(self._db.execute("PRAGMA user_version").fetchone()[0])
+            if version == 0:
+                self._db.execute("""CREATE TABLE requests (
+                    repository_id INTEGER NOT NULL, mailbox_epoch TEXT NOT NULL,
+                    request_id TEXT NOT NULL, input_sha256 TEXT NOT NULL,
+                    request_json BLOB NOT NULL, capability TEXT NOT NULL,
+                    state TEXT NOT NULL, policy_revision INTEGER NOT NULL,
+                    policy_decision TEXT NOT NULL, created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL, expires_at TEXT NOT NULL,
+                    attempt_id TEXT, attempt_started_at TEXT,
+                    possible_effect INTEGER NOT NULL DEFAULT 0,
+                    cancel_requested INTEGER NOT NULL DEFAULT 0,
+                    result_json BLOB, artifact_ids_json BLOB, publication_ref TEXT,
+                    notification_ref TEXT, terminal_code TEXT,
+                    PRIMARY KEY (repository_id, mailbox_epoch, request_id))""")
+                self._db.execute("""CREATE TABLE collisions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT, repository_id INTEGER NOT NULL,
+                    mailbox_epoch TEXT NOT NULL, request_id TEXT NOT NULL,
+                    existing_sha256 TEXT NOT NULL, conflicting_sha256 TEXT NOT NULL,
+                    observed_at TEXT NOT NULL)""")
+                self._db.execute("CREATE INDEX requests_state_idx ON requests(state)")
+                version = 1
+            if version == 1:
+                self._db.execute("""CREATE TABLE local_authority (
+                    repository_id INTEGER NOT NULL, mailbox_epoch TEXT NOT NULL,
+                    request_id TEXT NOT NULL, binding_json BLOB NOT NULL,
+                    approval_json BLOB,
+                    PRIMARY KEY (repository_id, mailbox_epoch, request_id),
+                    FOREIGN KEY (repository_id, mailbox_epoch, request_id)
+                    REFERENCES requests(repository_id, mailbox_epoch, request_id))""")
+                self._db.execute("CREATE TABLE control_state (id INTEGER PRIMARY KEY CHECK(id=1), paused INTEGER NOT NULL)")
+                self._db.execute("INSERT INTO control_state VALUES(1,0)")
+                self._db.execute("PRAGMA user_version=2")
+            elif version != SCHEMA_VERSION:
+                raise BrokerError("STATE_MIGRATION_REQUIRED", "unsupported schema version")
+
+    @contextmanager
+    def transaction(self):
+        """Serialize short state transitions, including across SQLite connections.
+
+        Handlers and human prompts MUST NOT run inside this transaction.
+        """
+        with self._mutex:
+            outer = not self._db.in_transaction
+            if outer:
+                self._db.execute("BEGIN IMMEDIATE")
+            try:
+                yield
+                if outer:
+                    self._db.commit()
+            except BaseException:
+                if outer:
+                    self._db.rollback()
+                raise
 
     def _pending_count(self) -> int:
         placeholders = ",".join("?" for _ in PENDING_STATES)
         return int(self._db.execute(f"SELECT COUNT(*) FROM requests WHERE state IN ({placeholders})", tuple(PENDING_STATES)).fetchone()[0])
 
-    def receive(self, repository_id: int, request: Mapping[str, Any], decision: Decision, *, now: datetime | None = None) -> tuple[RequestKey, str]:
+    def receive(self, repository_id: int, request: Mapping[str, Any], decision: Decision, *, now: datetime | None = None, binding: Mapping[str, Any] | None = None) -> tuple[RequestKey, str]:
         normalized = validate_request(dict(request), now=now)
         digest = canonical_sha256(normalized)
+        if type(repository_id) is not int or repository_id <= 0:
+            raise BrokerError("ORIGIN_INVALID", "repository identity must be a positive integer")
         if digest != decision.request_sha256:
             raise BrokerError("DECISION_DIGEST_MISMATCH", "policy decision is not bound to this request")
         key = RequestKey(repository_id, normalized["mailbox_epoch"], normalized["request_id"])
         encoded = canonical_json(normalized)
         timestamp = utc_text(now)
-        with self._mutex, self._db:
+        collision = False
+        with self.transaction():
             row = self._db.execute(
                 "SELECT input_sha256,state FROM requests WHERE repository_id=? AND mailbox_epoch=? AND request_id=?",
                 (key.repository_id, key.mailbox_epoch, key.request_id),
@@ -239,23 +255,81 @@ class Journal:
                     "UPDATE requests SET state='quarantined',terminal_code='REQUEST_ID_COLLISION',updated_at=? WHERE repository_id=? AND mailbox_epoch=? AND request_id=?",
                     (timestamp, key.repository_id, key.mailbox_epoch, key.request_id),
                 )
-                raise BrokerError("REQUEST_ID_COLLISION", "same request ID was observed with different canonical bytes")
-            if self._pending_count() >= self.queue_limit:
-                raise BrokerError("QUEUE_FULL", "pending request limit reached")
-            if decision.action == "deny":
-                state, terminal = "rejected", decision.code
-            elif decision.action == "confirm":
-                state, terminal = "awaiting_approval", None
-            elif decision.action == "allow":
-                state, terminal = "ready", None
+                collision = True
             else:
-                raise BrokerError("DECISION_INVALID", f"unknown policy action {decision.action!r}")
-            self._db.execute(
-                """INSERT INTO requests(repository_id,mailbox_epoch,request_id,input_sha256,request_json,capability,state,policy_revision,policy_decision,created_at,updated_at,expires_at,terminal_code)
-                   VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-                (key.repository_id, key.mailbox_epoch, key.request_id, digest, encoded, normalized["capability"], state, decision.policy_revision, decision.action, timestamp, timestamp, normalized["expires_at"], terminal),
-            )
+                if self.is_paused():
+                    raise BrokerError("PAUSED", "new request admission is paused locally")
+                if self._pending_count() >= self.queue_limit:
+                    raise BrokerError("QUEUE_FULL", "pending request limit reached")
+                if decision.action == "deny":
+                    state, terminal = "rejected", decision.code
+                elif decision.action == "confirm":
+                    state, terminal = "awaiting_approval", None
+                elif decision.action == "allow":
+                    state, terminal = "ready", None
+                else:
+                    raise BrokerError("DECISION_INVALID", "unknown policy action")
+                self._db.execute(
+                    """INSERT INTO requests(repository_id,mailbox_epoch,request_id,input_sha256,request_json,capability,state,policy_revision,policy_decision,created_at,updated_at,expires_at,terminal_code)
+                       VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    (key.repository_id, key.mailbox_epoch, key.request_id, digest, encoded, normalized["capability"], state, decision.policy_revision, decision.action, timestamp, timestamp, normalized["expires_at"], terminal),
+                )
+                if binding is not None:
+                    self._db.execute("INSERT INTO local_authority VALUES(?,?,?,?,NULL)",
+                                     (key.repository_id, key.mailbox_epoch, key.request_id, canonical_json(dict(binding))))
+        if collision:
+            raise BrokerError("REQUEST_ID_COLLISION", "same request ID was observed with different canonical bytes")
         return key, state
+
+    def is_paused(self) -> bool:
+        with self._mutex:
+            return bool(self._db.execute("SELECT paused FROM control_state WHERE id=1").fetchone()[0])
+
+    def set_paused(self, paused: bool) -> None:
+        if type(paused) is not bool:
+            raise BrokerError("CONFIG_INVALID", "pause state must be boolean")
+        with self.transaction():
+            self._db.execute("UPDATE control_state SET paused=? WHERE id=1", (int(paused),))
+
+    def status(self, *, limit: int = 100) -> dict[str, Any]:
+        if type(limit) is not int or not 1 <= limit <= 100:
+            raise BrokerError("LIMIT_INVALID", "status limit must be 1..100")
+        with self._mutex:
+            counts = {r[0]: r[1] for r in self._db.execute("SELECT state,COUNT(*) FROM requests GROUP BY state")}
+            rows = self._db.execute("""SELECT repository_id,mailbox_epoch,request_id,capability,
+                input_sha256,state,expires_at,terminal_code FROM requests
+                ORDER BY updated_at DESC,repository_id,mailbox_epoch,request_id LIMIT ?""", (limit,)).fetchall()
+            return {"paused": self.is_paused(), "counts": counts, "requests": [dict(r) for r in rows],
+                    "truncated": sum(counts.values()) > limit, "running": counts.get("running", 0)}
+
+    def authority(self, key: RequestKey) -> dict[str, Any]:
+        with self._mutex:
+            row = self._db.execute("SELECT binding_json,approval_json FROM local_authority WHERE repository_id=? AND mailbox_epoch=? AND request_id=?",
+                                   (key.repository_id, key.mailbox_epoch, key.request_id)).fetchone()
+            if row is None:
+                raise BrokerError("AUTHORITY_MISSING", "request has no durable local authority binding; re-import with a new ID")
+            return {"binding": json.loads(row[0]), "approval": json.loads(row[1]) if row[1] is not None else None}
+
+    def store_approval(self, key: RequestKey, approval: Mapping[str, Any]) -> None:
+        with self.transaction():
+            self.authority(key)
+            self._db.execute("UPDATE local_authority SET approval_json=? WHERE repository_id=? AND mailbox_epoch=? AND request_id=?",
+                             (canonical_json(dict(approval)), key.repository_id, key.mailbox_epoch, key.request_id))
+
+    def deny(self, key: RequestKey, *, code: str = "LOCAL_DENIED", now: datetime | None = None) -> str:
+        if code not in {"LOCAL_DENIED", "APPROVAL_REVOKED", "AUTHORITY_CHANGED"}:
+            raise BrokerError("DECISION_INVALID", "unsupported local denial code")
+        with self.transaction():
+            row = self.get(key)
+            if row["state"] in TERMINAL_STATES:
+                return row["state"]
+            if row["state"] in {"running", "result_saved", "published", "notification_pending"}:
+                raise BrokerError("TOO_LATE", "work has started; pause and reconcile any completed effects")
+            self._db.execute("UPDATE requests SET state='rejected',terminal_code=?,updated_at=? WHERE repository_id=? AND mailbox_epoch=? AND request_id=?",
+                             (code, utc_text(now), key.repository_id, key.mailbox_epoch, key.request_id))
+            self._db.execute("UPDATE local_authority SET approval_json=NULL WHERE repository_id=? AND mailbox_epoch=? AND request_id=?",
+                             (key.repository_id, key.mailbox_epoch, key.request_id))
+            return "rejected"
 
     def get(self, key: RequestKey) -> dict[str, Any]:
         row = self._db.execute(
@@ -272,8 +346,12 @@ class Journal:
 
     def approve(self, key: RequestKey, decision: Decision, *, now: datetime | None = None) -> None:
         timestamp = utc_text(now)
-        with self._mutex, self._db:
+        with self.transaction():
             row = self.get(key)
+            if row["expires_at"] <= timestamp:
+                raise BrokerError("EXPIRED", "request expired before approval")
+            if self.is_paused():
+                raise BrokerError("PAUSED", "approval is paused locally")
             if row["state"] != "awaiting_approval":
                 raise BrokerError("STATE_CONFLICT", "request is not awaiting approval")
             if decision.action != "allow" or decision.request_sha256 != row["input_sha256"]:
@@ -287,7 +365,7 @@ class Journal:
 
     def expire_due(self, *, now: datetime | None = None) -> int:
         timestamp = utc_text(now)
-        with self._mutex, self._db:
+        with self.transaction():
             cursor = self._db.execute(
                 "UPDATE requests SET state='expired',terminal_code='EXPIRED',updated_at=? WHERE state IN ('received','validated','awaiting_approval','ready') AND expires_at<=?",
                 (timestamp, timestamp),
@@ -296,7 +374,7 @@ class Journal:
 
     def cancel(self, key: RequestKey, *, now: datetime | None = None) -> str:
         timestamp = utc_text(now)
-        with self._mutex, self._db:
+        with self.transaction():
             row = self.get(key)
             state = row["state"]
             if state in TERMINAL_STATES:
@@ -319,8 +397,12 @@ class Journal:
     def start(self, key: RequestKey, *, possible_effect: bool, now: datetime | None = None) -> str:
         timestamp = utc_text(now)
         attempt = str(uuid4())
-        with self._mutex, self._db:
+        with self.transaction():
             row = self.get(key)
+            if self.is_paused():
+                raise BrokerError("PAUSED", "execution is paused locally")
+            if row["expires_at"] <= timestamp:
+                raise BrokerError("EXPIRED", "request expired before execution")
             if row["state"] != "ready":
                 raise BrokerError("STATE_CONFLICT", f"cannot start request from state {row['state']!r}")
             self._db.execute(
@@ -337,7 +419,7 @@ class Journal:
         artifacts = result.get("artifact_ids", [])
         if not isinstance(artifacts, list) or not all(isinstance(x, str) for x in artifacts):
             raise BrokerError("RESULT_INVALID", "artifact_ids must be a list of strings")
-        with self._mutex, self._db:
+        with self.transaction():
             row = self.get(key)
             if row["state"] != "running":
                 raise BrokerError("STATE_CONFLICT", f"cannot save result from state {row['state']!r}")
@@ -350,8 +432,10 @@ class Journal:
         if not publication_ref or len(publication_ref) > 512:
             raise BrokerError("PUBLICATION_INVALID", "publication_ref is empty or too long")
         timestamp = utc_text(now)
-        with self._mutex, self._db:
+        with self.transaction():
             row = self.get(key)
+            if self.is_paused():
+                raise BrokerError("PAUSED", "publication is paused locally")
             if row["state"] not in {"result_saved", "published"}:
                 raise BrokerError("STATE_CONFLICT", "only durable results can be published")
             if row["publication_ref"] and row["publication_ref"] != publication_ref:
@@ -363,8 +447,10 @@ class Journal:
 
     def mark_notification_pending(self, key: RequestKey, notification_ref: str, *, now: datetime | None = None) -> None:
         timestamp = utc_text(now)
-        with self._mutex, self._db:
+        with self.transaction():
             row = self.get(key)
+            if self.is_paused():
+                raise BrokerError("PAUSED", "new handoff admission is paused locally")
             if row["state"] not in {"published", "notification_pending"}:
                 raise BrokerError("STATE_CONFLICT", "notification requires a published result")
             self._db.execute(
@@ -374,7 +460,7 @@ class Journal:
 
     def acknowledge(self, key: RequestKey, *, now: datetime | None = None) -> None:
         timestamp = utc_text(now)
-        with self._mutex, self._db:
+        with self.transaction():
             row = self.get(key)
             if row["state"] not in {"published", "notification_pending", "acknowledged"}:
                 raise BrokerError("STATE_CONFLICT", "acknowledgement requires publication")
@@ -387,7 +473,7 @@ class Journal:
         timestamp = utc_text(now)
         resumed = 0
         indeterminate = 0
-        with self._mutex, self._db:
+        with self.transaction():
             rows = self._db.execute("SELECT repository_id,mailbox_epoch,request_id,capability,possible_effect FROM requests WHERE state='running'").fetchall()
             for row in rows:
                 key = (row["repository_id"], row["mailbox_epoch"], row["request_id"])
@@ -405,14 +491,29 @@ class Journal:
 
 
 class Dispatcher:
-    def __init__(self, journal: Journal, registry: CapabilityRegistry) -> None:
+    def __init__(self, journal: Journal, registry: CapabilityRegistry, *, authorize: Callable[[RequestKey], Decision] | None = None) -> None:
         self.journal = journal
         self.registry = registry
+        self.authorize = authorize
 
     def execute(self, key: RequestKey, *, now: datetime | None = None) -> str:
-        row = self.journal.get(key)
-        spec = self.registry.get(row["capability"])
-        attempt = self.journal.start(key, possible_effect=spec.mutating, now=now)
+        # Authorization and transition share the short DB transaction; neither the
+        # human prompt nor capability handler runs while holding this writer lock.
+        with self.journal.transaction():
+            row = self.journal.get(key)
+            spec = self.registry.get(row["capability"])
+            if self.authorize is not None:
+                decision = self.authorize(key)
+                if not decision.permitted or decision.request_sha256 != row["input_sha256"]:
+                    raise BrokerError("AUTHORITY_CHANGED", "current local authority does not permit execution")
+            else:
+                # Legacy low-level fake harnesses may omit authority. Requests
+                # imported through the real control surface must never do so.
+                bound = self.journal._db.execute("SELECT 1 FROM local_authority WHERE repository_id=? AND mailbox_epoch=? AND request_id=?",
+                    (key.repository_id, key.mailbox_epoch, key.request_id)).fetchone()
+                if bound:
+                    raise BrokerError("AUTHORITY_REQUIRED", "bound requests require current policy revalidation")
+            attempt = self.journal.start(key, possible_effect=spec.mutating, now=now)
         context = ExecutionContext(key, attempt, lambda: self.journal.cancellation_requested(key))
         try:
             result = dict(spec.handler(row["request"], context))
@@ -423,6 +524,6 @@ class Dispatcher:
             return "result_saved"
         except BrokerError:
             raise
-        except BaseException as exc:
+        except Exception as exc:
             self.journal.save_result(key, {"code": "HANDLER_FAILED", "error_type": type(exc).__name__, "artifact_ids": []}, state="failed", terminal_code="HANDLER_FAILED", now=now)
             return "failed"
