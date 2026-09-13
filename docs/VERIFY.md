@@ -8,7 +8,7 @@ This file specifies future tests. Nothing below is a claimed measurement. Every 
 
 **Deterministic integration:** fake transport, fake monotonic clock, fake window provider, local SQLite and synthetic collector. Inject failures at each state transition: before execution, after effect, before result save, after commit but before notifier acknowledgement. Demonstrate no automatic retry of ambiguous writes and no rerun on publication retry.
 
-**Windows integration:** real supervised subprocess streams, PowerShell 5.1 launcher compatibility and a current PowerShell where available, Python 3.12+ environments, Unicode/spaced paths, code pages, cancellation/child cleanup, multiple worktrees, locked files, reparse points, interactive-session restrictions and capture matrix. Linux-only runs cannot satisfy this layer.
+**Windows integration:** real supervised subprocess streams, PowerShell 5.1 launcher compatibility and a current PowerShell where available, Python 3.12+ environments, Unicode/spaced paths, code pages, cancellation/child cleanup, multiple worktrees, locked files, reparse points, interactive-session restrictions and the capture acceptance selected by the current backend gate. Linux-only runs cannot satisfy this layer. For the interim Greenshot backend selected by IL-012, IL-013 requires one supervised installed-Greenshot capture of a harmless approved synthetic window plus its negative target/config cases; the earlier WGC/PrintWindow matrix remains deferred research rather than an IL-013 completion prerequisite.
 
 **External acceptance:** a disposable private mailbox with actual gh auth and the chosen ordinary-Chat surface. Record human handoff steps separately from automatic ones. Use known text and known-shape screenshots; no personal desktop/password data.
 
@@ -24,7 +24,7 @@ This file specifies future tests. Nothing below is a claimed measurement. Every 
 | T-evidence | seeded token/path leakage, OSC/ANSI injection, chunk bounds, gaps, hashes, local-only image metadata | IL-007 |
 | T-approval | request digest display, expiry during approval, pause, deny, stale work, copied-pointer UX | IL-008, IL-021 |
 | T-retention | disk full, quotas, pending artifact protection, tombstones, epoch rotation plan, export incident | IL-009 |
-| T-capture | wrong-window denial, handle reuse, lock, minimization, occlusion, GPU output, DPI/multi-monitor, timeout, blank frame | IL-012, IL-013 |
+| T-capture | exact target/identity and foreground checks, handle/process reuse, unavailable/locked target, backend/config failure, timeout/ambiguity, blank/wrong-frame review and no desktop fallback. Interim Greenshot acceptance additionally requires one real installed-Greenshot synthetic-window smoke; WGC/PrintWindow GPU/DPI/minimization matrix is deferred unless native capture is resumed. | IL-012, IL-013 |
 | T-vision | actual image input vs text-only link, private access failure, manual attachment, delivery status honesty | IL-014, IL-015 |
 | T-gh | fixed repo/host/argv, no secret env, malicious config, current-state preview, ambiguous write recovery | IL-016, IL-017 |
 | T-ansible | absent runner/status, schema mismatch, pinned SHA mismatch, stale generations, no remote executable update | IL-018, IL-019 |
@@ -41,7 +41,7 @@ Networking: default <=120 active poll attempts/hour and <=60 publication commits
 
 ## Definition of done per issue
 
-All acceptance criteria addressed; tests added and exact commands/results retained; expected artifacts exist; no undocumented interface changes; scope/locks respected; evidence report in `docs/evidence/IL-xxx.md`; manifest and issue reconciled; unsupported native/external tests clearly marked. A research issue can complete with a negative result plus a documented fallback and dependent gate state.
+All acceptance criteria addressed; tests added and exact commands/results retained; expected artifacts exist; no undocumented interface changes; scope/locks respected; evidence report in `docs/evidence/IL-xxx.md`; manifest and issue reconciled; unsupported native/external tests clearly marked. A research issue can complete with a negative result plus a documented fallback and dependent gate state. A later explicit operator requirement amendment may narrow a gate; the superseded verification remains NOT RUN/deferred rather than being relabelled PASS.
 
 ## Supervised MVP release (IL-027)
 
