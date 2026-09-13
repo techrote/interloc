@@ -18,7 +18,7 @@ Policy files live locally, schema-validated and permission-restricted. Requests 
 
 Ping and tail of an explicitly enrolled, sanitized session may be locally pre-approved. Window inventory is scoped and can itself disclose private titles, so it requires enrollment and redaction. Window capture requires preview/confirmation by default; optional session-limited consent binds the exact app/process identity and allowed region. Never choose the active window merely because a requester omitted a target.
 
-Full desktop/monitor, clipboard reading, raw file access, key/mouse injection, arbitrary shell and arbitrary gh arguments are outside MVP. `clipboard.write` is not a remote capability: local handoff may write a prepared pointer only on a deliberate user action. A later capability needs its own threat assessment and tests.
+Full desktop/monitor, clipboard reading, raw file access, **general** key/mouse injection, arbitrary shell and arbitrary gh arguments are outside MVP. The interim Greenshot capture provider has one narrow internal exception: after exact target, foreground and local-consent checks, it may emit only Greenshot's locally configured PrintScreen-based window-capture chord. Request data cannot name keys, modifiers or chords, the provider never focuses a target window, and no general input capability is exposed. `clipboard.write` is not a remote capability: local handoff may write a prepared pointer only on a deliberate user action. A later capability needs its own threat assessment and tests.
 
 Mutating GitHub actions and trusted-task proposals require a visible local preview, destination, scope and confirmation bound to canonical request digest, policy revision, expiry and relevant current state. Revalidate after approval and immediately before use. Changed issue/repo state invalidates stale approval rather than applying blindly.
 
@@ -33,6 +33,8 @@ Mailboxes supply only data. Never run a script, import Python, source PowerShell
 ## Capture safeguards
 
 Opaque window IDs expire and bind device, interactive desktop/session, process ID plus creation identity, window handle and scope. HWND reuse/title matches alone do not authorize capture. Revalidate immediately before capture; reject closed/replaced/elevated/inaccessible/protected/locked-session targets. Scoped failure never falls back to the whole desktop. Black/blank frames are not automatically a valid screenshot; record a diagnostic and support retry with human review.
+
+For the interim Greenshot adapter, the approved target must already be the foreground window; Interloc does not activate or focus it. Greenshot must be locally configured for non-interactive window capture, `FileDefault`-only PNG output, clipboard-path copying disabled, and the enrolled local capture directory. Configuration mismatch, no output, multiple changed outputs, target-identity drift or foreground drift fails closed. Interloc never changes Greenshot configuration automatically and never substitutes region, monitor or desktop capture.
 
 Preview can itself contain secrets; keep it local. Image redaction is not a guarantee, and OCR is neither required nor a reliable secret detector. Explicit consent, target restriction and manual image review are primary controls. Preserve artifact hashes and distinguish original from any user-approved edited export.
 
