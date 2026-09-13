@@ -14,9 +14,11 @@ Optional writes (IL-017): `github.issue.comment` and `github.issue.update` limit
 
 ## Existing trust planes
 
-`techrote/ansible` is the user's trusted human-initiated execution plane. `techrote/intrallm` is agent-visible reference/task data. Ansible policy explicitly separates executable updates from refreshed remote assignments. Its open issue #1 specifies slots 1-4, fixed runners including noop_v1, monotonic generations, isolated local state and status/result files. These are contracts/proposals to interoperate with, not proof of an installed implementation.
+`techrote/ansible` is the user's trusted human-initiated execution plane. `techrote/intrallm` is agent-visible reference/task data. Ansible policy explicitly separates executable updates from refreshed remote assignments. The planning-era issue #1 specified slots 1-4, fixed runners including noop_v1, monotonic generations, isolated local state and status/result files. The IL-018 implementation now pins the inspected producer source at `ab1f9023545539f334ebc23635b54c8b03eac40d`; see [ANSIBLE_TELEMETRY](ANSIBLE_TELEMETRY.md). An inspected repository contract is still not proof of an enrolled live installation.
 
 ## Status adapter (IL-018)
+
+Implemented in PR #45 with [compatibility notes](ANSIBLE_TELEMETRY.md), [evidence](evidence/IL-018.md) and [CI receipt](evidence/IL-018-CI.md). The producer's per-job files lack slot/generation, so those are explicitly operator-mapped or reported unavailable. Reported success is not independent evidence verification. Optional reference fetching and automatic courier wiring are not implemented; the normative optional design below remains future scope.
 
 Read explicitly mapped status JSONL/result files from a locally installed Ansible system, or synthetic fixtures when unavailable. Record source path alias, schema version, slot/run/generation, file offset and truncation/rotation events. Do not parse arbitrary natural-language instructions into commands. The adapter gracefully reports unavailable/stale/schema-mismatch without attempting to bootstrap or update Ansible.
 

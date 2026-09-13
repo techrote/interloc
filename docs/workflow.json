@@ -3,8 +3,8 @@
   "repository": "techrote/interloc",
   "overview_issue": 1,
   "plan_date": "2026-09-12",
-  "runtime_state": "not_implemented",
-  "scope_note": "All planned stable task IDs are published. Runtime prerequisites and conditional gates still apply.",
+  "runtime_state": "partial_components",
+  "scope_note": "All stable task IDs are published; merged component progress and unmerged IL-008 blockers are recorded in docs/EXECUTION_LEDGER.md and docs/SESSION_HANDOVER_2026-09-13.md. No integrated courier or release qualification is claimed.",
   "milestones": [
     {"id":"M0","title":"Contracts and safety foundation","native_number":null},
     {"id":"M1","title":"Supervised text courier","native_number":null},
@@ -12,7 +12,7 @@
     {"id":"M3","title":"Separately qualified integrations and local UI","native_number":null},
     {"id":"M4","title":"Conditional transport; not a release dependency","native_number":null}
   ],
-  "canonical_docs": ["README.md","AGENTS.md","docs/AGENT_CONTEXT.md","docs/ROADMAP.md","docs/SPEC.md","docs/SECURITY.md","docs/VERIFY.md","docs/RESEARCH.md","docs/DECISIONS.md","docs/PROVENANCE.md","docs/INTEGRATIONS.md","docs/BLOCKERS.md","docs/EXECUTION_LEDGER.md","docs/evidence/planning-audit.md"],
+  "canonical_docs": ["README.md","AGENTS.md","docs/AGENT_CONTEXT.md","docs/ROADMAP.md","docs/SPEC.md","docs/SECURITY.md","docs/VERIFY.md","docs/RESEARCH.md","docs/DECISIONS.md","docs/PROVENANCE.md","docs/INTEGRATIONS.md","docs/BLOCKERS.md","docs/EXECUTION_LEDGER.md","docs/evidence/planning-audit.md","docs/SESSION_HANDOVER_2026-09-13.md","docs/RETENTION_RECOVERY.md","docs/ANSIBLE_TELEMETRY.md","docs/evidence/IL-018-CI.md"],
   "blockers": [],
   "tasks": [
     {"id":"IL-001","issue":2,"title":"Development foundation","milestone":"M0","requires":[],"paths":["pyproject.toml","src/interloc/__init__.py",".github/workflows/"],"locks":["dependency-lock","runtime-wiring"],"publication":"published","blockers":[],"optional":false,"verification":"docs/evidence/IL-001.md","required_gates":[]},

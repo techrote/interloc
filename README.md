@@ -15,16 +15,21 @@ Interloc is intended to collect explicitly enrolled terminal output, publish bou
 
 Planning baseline dated 2026-09-12. **All planned stable task IDs IL-001 through IL-028 now have GitHub issues.** IL-018 and IL-019 are canonical issues #26/#27; IL-020 is #30; conditional IL-022 is #31. Accidental duplicates #28/#29 are closed as duplicates. IL-013 #14 is now the implementation issue rather than a blocker-only tracker.
 
-The implementation workflow starts at [issue 2 / IL-001](https://github.com/techrote/interloc/issues/2). Publication completeness does not imply runtime implementation or release readiness. No Interloc runtime, Windows capture, unattended Chat operation or performance result is claimed by the planning baseline.
+Runtime component implementation is underway. The merged baseline includes foundation, protocol/policy, broker, private-mailbox transport, enrolled collection, sanitization, retention and read-only Ansible telemetry. The combined suite has **183 passing tests**, including 72 new retention/telemetry tests, with successful Windows/Ubuntu Python 3.12/3.13/3.14 CI for the latest implementation PR.
+
+The approval/control CLI is implemented and tested on a separate **unmerged** branch; `main` still exposes help/doctor only. Its PR-creation block and outstanding interactive Windows Terminal check are recorded rather than worked around. The full text courier, live mailbox, ordinary-Chat and visual/release gates are **not qualified**.
+
+Start continuation at the [2026-09-13 handover](docs/SESSION_HANDOVER_2026-09-13.md), not by repeating foundation work. IL-016/#17 is the next independent implementation lane; IL-010 text integration and IL-019 task proposals remain blocked by IL-008. Consult the [current execution ledger](docs/EXECUTION_LEDGER.md) for merged evidence and exact issue status.
 
 From a repository checkout, run these commands separately:
 
 ```text
+python -m unittest discover -s tests -v
 python tools/audit_workflow.py
 python -m unittest discover -s tests/workflow -v
 ```
 
-The auditor never contacts GitHub or changes issues. `--graph-only` limits it to manifest checks; `--issues <file.json>` additionally checks a supplied complete REST-style issue snapshot. Readiness is a scheduling hint, not proof that prerequisite evidence passed.
+Use an installed development checkout as described in [DEVELOPMENT](docs/DEVELOPMENT.md). The auditor never contacts GitHub or changes issues. `--graph-only` limits it to manifest checks; `--issues <file.json>` additionally checks a supplied complete REST-style issue snapshot. Its default empty-completion readiness output is not the current execution frontier. Readiness is a scheduling hint, not proof that prerequisite evidence passed.
 
 ## Product boundary
 
@@ -34,4 +39,4 @@ Ordinary Chat remains the intended reasoning surface. The baseline is human-medi
 
 A text-file fetch does not prove that a private image reaches model vision. Capture, storage and delivery are separately verified. Local policy controls actions; remote messages are data, not executable instructions or policy updates.
 
-The Ansible/intrallm trust split is preserved in the design. Their Interloc integration issues are published, but implementation must still respect the existing trust boundary. No changes to those repositories or zaaggenz were made by this planning/publication work.
+The Ansible/intrallm trust split is preserved. [Read-only telemetry](docs/ANSIBLE_TELEMETRY.md) is merged with a pinned producer-format profile and synthetic verification; it does not execute the external runner or certify its reported success. [Retention and privacy recovery](docs/RETENTION_RECOVERY.md) are also implemented as a local component. Neither component is automatically wired into a courier service. No changes to the external repositories are part of this work.
