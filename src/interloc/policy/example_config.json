@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "repository_id": 123456789,
+  "mailbox_epoch": "00000000-0000-4000-8000-000000000001",
+  "target_device": "dev-box-1",
+  "private_repository": true,
+  "inbox_branch": "inbox",
+  "outbox_branch": "outbox/dev-box-1",
+  "revision": 1,
+  "grants": [
+    {"capability": "system.ping", "scope_id": "device", "decision": "allow", "destination": "mailbox"},
+    {"capability": "terminal.tail", "scope_id": "session:00000000-0000-4000-8000-000000000010", "decision": "allow", "destination": "mailbox"},
+    {"capability": "window.list", "scope_id": "capture:00000000-0000-4000-8000-000000000020", "decision": "confirm", "destination": "mailbox"},
+    {"capability": "capture.window", "scope_id": "capture:00000000-0000-4000-8000-000000000020", "decision": "confirm", "destination": "mailbox"}
+  ]
+}
