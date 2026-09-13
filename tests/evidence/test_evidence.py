@@ -16,7 +16,7 @@ class EvidenceTests(unittest.TestCase):
     def test_split_personal_path_variants_redact(self):
         path=r"C:\Users\alice\private"
         s=StreamingSanitizer(personal_paths=[path])
-        parts=["x C:\Users\ali","ce\private y C:/Users/alice/private z"]
+        parts=[r"x C:\Users\ali",r"ce\private y C:/Users/alice/private z"]
         output="".join(s.feed(x) for x in parts)+s.finish()
         self.assertNotIn("alice",output); self.assertEqual(output.count("[REDACTED]"),2)
 
